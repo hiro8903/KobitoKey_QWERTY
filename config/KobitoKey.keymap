@@ -1,31 +1,54 @@
-#include <input/processors.dtsi>
-#include <behaviors.dtsi>
-#include <dt-bindings/zmk/bt.h>
-#include <dt-bindings/zmk/keys.h>
-#include <dt-bindings/zmk/pointing.h>
+// ==============================================================================
+// 【ファイル概要】KobitoKey.keymap
+// 小人キー（左右分割40キー + 両手トラックボール）のキーマップ定義ファイルです。
+// 通常の文字入力、同時押し（コンボ）、長押し（レイヤータップ）、各レイヤーの動作を定義しています。
+// ==============================================================================
+
+// ------------------------------------------------------------------------------
+// 【ヘッダーファイルのインクルード】
+// ZMK ファームウェアの各種標準機能を取り込んでいます
+// ------------------------------------------------------------------------------
+#include <input/processors.dtsi>     // トラックボールなどのポインティング入力処理
+#include <behaviors.dtsi>            // タップ・長押し（Layer Tap / Mod Tap）などの動作定義
+#include <dt-bindings/zmk/bt.h>      // Bluetooth操作用コマンド (BT_SEL, BT_CLR等)
+#include <dt-bindings/zmk/keys.h>    // 一般キーコード定義 (A〜Z, 数字, 記号, 修飾キー等)
+#include <dt-bindings/zmk/pointing.h>// マウス操作用コード (mkp MB1, MB2等)
 
 / {
+    // ==========================================================================
+    // 【コンボ（同時押し）の定義】
+    // 指定した複数のキーをほぼ同時に押したときに別のキー入力を発生させる便利機能です。
+    // キー位置（key-positions）は、全40キーに左上から順に 0〜39 の番号が振られています。
+    // ==========================================================================
     combos {
         compatible = "zmk,combos";
 
+        // 「英数」切り替えコンボ (Mac/Win用)
+        // D(12) と F(13) を50ms以内に同時押しすると「英数キー」を送信
         combo_eisu {
             timeout-ms = <50>;
             key-positions = <12 13>;
             bindings = <&kp LANG2>;
         };
 
+        // 「かな」切り替えコンボ (Mac/Win用)
+        // J(16) と K(17) を50ms以内に同時押しすると「かなキー」を送信
         combo_kana {
             timeout-ms = <50>;
             key-positions = <16 17>;
             bindings = <&kp LANG1>;
         };
 
+        // 「Escape」キーのコンボ
+        // Q(0) と W(1) を50ms以内に同時押しすると「Escキー」を送信
         combo_esc {
             timeout-ms = <50>;
             key-positions = <0 1>;
             bindings = <&kp ESC>;
         };
 
+        // 「Tab」キーのコンボ
+        // A(10) と S(11) を50ms以内に同時押しすると「Tabキー」を送信
         combo_tab {
             timeout-ms = <50>;
             key-positions = <10 11>;
@@ -33,44 +56,108 @@
         };
     };
 
+    // ==========================================================================
+    // 【キーマップ（レイヤー）の定義】
+    // 各レイヤーごとに全40キー（4行 × 左右各5キー = 40キー）の割り当てを記述しています。
+    // ==========================================================================
     keymap {
         compatible = "zmk,keymap";
 
+        // ----------------------------------------------------------------------
+        // ■ Layer 0: default_layer（標準の英字入力レイヤー）
+        // ----------------------------------------------------------------------
         default_layer {
             bindings = <
+// [1行目: 最上段]
+// 左手: Q, W, E, R, T                          | 右手: Y, U, I, O, P
 &kp Q      &kp W     &kp E     &kp R        &kp T      &kp Y     &kp U        &kp I      &kp O      &kp P
+
+// [2行目: ホームポジション段]
+// 左手: A, S, D, F, G                          | 右手: H, J, K, L, ; (セミコロン)
 &kp A      &kp S     &kp D     &kp F        &kp G      &kp H     &kp J        &kp K      &kp L      &kp SEMI
+
+// [3行目: 下段]
+// 左手: Z, X, C, V, B                          | 右手: N, M, , (カンマ), . (ピリオド), ' (シングルクォート)
 &kp Z      &kp X     &kp C     &kp V        &kp B      &kp N     &kp M        &kp COMMA  &kp DOT    &kp APOS
+
+// [4行目: 最下段・親指まわり]
+// 左手: 左Shift, 左Alt, 左Cmd, [長押しLayer2 / 短押しSpace], 左Ctrl
+// 右手: Backspace, [長押しLayer1 / 短押しEnter], 右Shift, 右Shift, [長押しLeft Alt / 短押し /]
 &kp LSHFT  &kp LALT  &kp LCMD  &lt 2 SPACE  &kp LCTRL  &kp BSPC  &lt 1 ENTER  &kp RSHFT  &kp RSHFT  &mt LALT SLASH
             >;
         };
 
+        // ----------------------------------------------------------------------
+        // ■ Layer 1: layer1 [NUMBER]（数字テンキー ＆ 矢印・記号レイヤー）
+        // Space右側の「Enter（lt 1 ENTER）」を長押ししている間、このレイヤーになります。
+        // ----------------------------------------------------------------------
         layer1 {
             label = "NUMBER";
             bindings = <
+// [1行目]
+// 左手: 0, 1, 2, 3, (透過)                     | 右手: - (マイナス), (透過), ↑ (上矢印), (透過), (透過)
 &kp N0     &kp N1  &kp N2  &kp N3     &trans  &kp MINUS  &trans     &kp UP    &trans     &trans
+
+// [2行目]
+// 左手: = (イコール), 4, 5, 6, (透過)          | 右手: + (プラス), ← (左矢印), ↓ (下矢印), → (右矢印), (透過)
 &kp EQUAL  &kp N4  &kp N5  &kp N6     &trans  &kp PLUS   &kp LEFT   &kp DOWN  &kp RIGHT  &trans
+
+// [3行目]
+// 左手: (透過), 7, 8, 9, (透過)                | 右手: * (アスタリスク), / (スラッシュ), [ (開き角括弧), ] (閉じ角括弧), (透過)
 &trans     &kp N7  &kp N8  &kp N9     &trans  &kp ASTRK  &kp SLASH  &kp LBKT  &kp RBKT   &trans
+
+// [4行目]
+// 左手: (透過), (透過), (透過), 左Shift, (透過)| 右手: (すべて透過：Layer 0のキーがそのまま効きます)
 &trans     &trans  &trans  &kp LSHFT  &trans  &trans     &trans     &trans    &trans     &trans
             >;
         };
 
+        // ----------------------------------------------------------------------
+        // ■ Layer 2: layer2 [FUNCTION]（Bluetooth接続 ＆ ファンクションキー）
+        // 左手親指の「Space（lt 2 SPACE）」を長押ししている間、このレイヤーになります。
+        // ----------------------------------------------------------------------
         layer2 {
             label = "FUNCTION";
             bindings = <
+// [1行目]
+// 左手: Bluetooth接続先 1〜5番の切り替え        | 右手: F1 〜 F5
 &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4    &kp F1   &kp F2   &kp F3  &kp F4  &kp F5
+
+// [2行目]
+// 左手: (透過), (透過), (透過), (透過), 現在のBTペアリング消去 | 右手: F6 〜 F10
 &trans        &trans        &trans        &trans        &bt BT_CLR      &kp F6   &kp F7   &kp F8  &kp F9  &kp F10
+
+// [3行目]
+// 左手: (透過), (透過), (透過), (透過), 全BTペアリング消去   | 右手: F11, F12, (透過), (透過), (透過)
 &trans        &trans        &trans        &trans        &bt BT_CLR_ALL  &kp F11  &kp F12  &trans  &trans  &trans
+
+// [4行目]
+// 左手: (すべて透過)                           | 右手: Deleteキー, (残り透過)
 &trans        &trans        &trans        &trans        &trans          &kp DEL  &trans   &trans  &trans  &trans
             >;
         };
 
+        // ----------------------------------------------------------------------
+        // ■ Layer 3: layer3 [MOUSE]（トラックボール操作用マウスレイヤー）
+        // トラックボールを動かした際に自動的（AUTO MOUSE）に呼び出されるレイヤーです。
+        // ----------------------------------------------------------------------
         layer3 {
             label = "MOUSE";
             bindings = <
+// [1行目]
+// 左手: (透過)                                 | 右手: (透過), 左クリック (MB1), 中クリック/ホイール (MB3), 右クリック (MB2), (透過)
 &trans     &trans  &trans    &trans    &trans  &trans  &mkp MB1  &mkp MB3  &mkp MB2  &trans
+
+// [2行目]
+// 左手・右手: すべて透過（Layer 0の通常キーがそのまま効きます）
 &trans     &trans  &trans    &trans    &trans  &trans  &trans    &trans    &trans    &trans
+
+// [3行目]
+// 左手・右手: すべて透過
 &trans     &trans  &trans    &trans    &trans  &trans  &trans    &trans    &trans    &trans
+
+// [4行目]
+// 左手: 左Shift, (透過), 左Cmd, 左Alt, [Layer 0に戻る] | 右手: (透過), (透過), (透過), [Layer 0に戻る], 右Alt
 &kp LSHFT  &trans  &kp LCMD  &kp LALT  &to 0   &trans  &trans    &trans    &to 0     &kp RALT
             >;
         };
