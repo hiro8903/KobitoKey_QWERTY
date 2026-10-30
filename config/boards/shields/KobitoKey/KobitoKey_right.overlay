@@ -57,7 +57,7 @@
         reg = <0>;
         spi-max-frequency = <2000000>;       // SPI通信の最大クロック周波数: 2MHz
         irq-gpios = <&gpio0 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>; // IRQ割り込みピン
-        cpi = <600>;                         /* センサー感度（CPI: Counts Per Inch）
+        cpi = <1200>;                         /* センサー感度（CPI: Counts Per Inch）
                                                ★ 調整ポイント: 右手はカーソル移動用なので左手より高めに設定。
                                                ★ 速すぎる場合: 300〜400 に下げる
                                                ★ 遅すぎる場合: 800〜1000 に上げる
