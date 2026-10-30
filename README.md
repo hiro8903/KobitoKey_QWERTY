@@ -1022,8 +1022,9 @@ CONFIG_PMW3610=y                      # PMW3610センサードライバを有効
 CONFIG_PMW3610_INVERT_X=y             # X軸（左右）の入力方向を反転
                                       # ★ カーソルが左右逆に動く場合は「=n」にする
 CONFIG_PMW3610_SMART_ALGORITHM=y      # 省電力・追従精度の「スマートアルゴリズム」を有効化
-CONFIG_PMW3610_REPORT_INTERVAL_MIN=12 # 最小レポート間隔（ミリ秒）= 最大レポートレート約83Hz
-                                      # ★ 小さくするほど応答が速くなるが電力消費も増える
+# 最小レポート間隔（ミリ秒）= 最大レポートレート約83Hz
+# ★ 小さくするほど応答が速くなるが電力消費も増える
+CONFIG_PMW3610_REPORT_INTERVAL_MIN=12
 
 # トラックボールの傾き（角度）補正機能
 CONFIG_SENSOR_ROTATION=y      # センサー回転補正を有効化（overlay の rotation-angle で角度指定）
@@ -1041,12 +1042,16 @@ CONFIG_ZMK_SPLIT_ROLE_CENTRAL=y   # ★ 左手側が「親機（Central）」= U
 # 小人キーには現在のレイヤーやバッテリー残量を色で知らせる小さなLEDがあります。
 # ==============================================================================
 CONFIG_RGBLED_WIDGET=y                # RGB LED インジケーターウィジェットを有効化
-CONFIG_RGBLED_WIDGET_INTERVAL_MS=1000 # LEDの更新間隔（ミリ秒）= 1秒ごとに状態を更新
+# LEDの更新間隔（ミリ秒）= 1秒ごとに状態を更新
+CONFIG_RGBLED_WIDGET_INTERVAL_MS=1000
 
 # バッテリー残量による LED 色変化のしきい値（%単位）
-CONFIG_RGBLED_WIDGET_BATTERY_LEVEL_HIGH=60     # 60%以上: 「高残量」色（緑系）で点灯
-CONFIG_RGBLED_WIDGET_BATTERY_LEVEL_LOW=30      # 30%以下: 「低残量」色（黄・橙系）で点灯
-CONFIG_RGBLED_WIDGET_BATTERY_LEVEL_CRITICAL=10 # 10%以下: 「警告」色（赤系）で点灯
+# 60%以上: 「高残量」色（緑系）で点灯
+CONFIG_RGBLED_WIDGET_BATTERY_LEVEL_HIGH=60
+# 30%以下: 「低残量」色（黄・橙系）で点灯
+CONFIG_RGBLED_WIDGET_BATTERY_LEVEL_LOW=30
+# 10%以下: 「警告」色（赤系）で点灯
+CONFIG_RGBLED_WIDGET_BATTERY_LEVEL_CRITICAL=10
 
 # レイヤーごとの LED 点灯色番号
 # ★ 色番号は zmk-rgbled-widget の仕様に依存。0=消灯、各番号の実際の色はウィジェット仕様を参照
@@ -1060,16 +1065,23 @@ CONFIG_RGBLED_WIDGET_BATTERY_LEVEL_CRITICAL=10 # 10%以下: 「警告」色（�
 #  5→マゼンタ
 #  6→シアン
 #  7→白
-CONFIG_RGBLED_WIDGET_SHOW_LAYER_COLORS=y  # レイヤーに応じたLED色切り替えを有効化
-CONFIG_RGBLED_WIDGET_LAYER_0_COLOR=0      # Layer 0（通常レイヤー）: 消灯
-CONFIG_RGBLED_WIDGET_LAYER_1_COLOR=4      # Layer 1（NUMBERレイヤー）: 色番号4
-CONFIG_RGBLED_WIDGET_LAYER_2_COLOR=4      # Layer 2（FUNCTIONレイヤー）: 色番号4
-CONFIG_RGBLED_WIDGET_LAYER_3_COLOR=6      # Layer 3（MOUSEレイヤー）: 色番号6（青系）
-CONFIG_RGBLED_WIDGET_LAYER_4_COLOR=4      # Layer 4（予備レイヤー）: 色番号4
+
+# レイヤーに応じたLED色切り替えを有効化
+CONFIG_RGBLED_WIDGET_SHOW_LAYER_COLORS=y
+# Layer 0（通常レイヤー）: 消灯
+CONFIG_RGBLED_WIDGET_LAYER_0_COLOR=0
+# Layer 1（NUMBERレイヤー）: 色番号4
+CONFIG_RGBLED_WIDGET_LAYER_1_COLOR=4
+# Layer 2（FUNCTIONレイヤー）: 色番号4
+CONFIG_RGBLED_WIDGET_LAYER_2_COLOR=4
+# Layer 3（MOUSEレイヤー）: 色番号6（青系）
+CONFIG_RGBLED_WIDGET_LAYER_3_COLOR=6
+# Layer 4（予備レイヤー）: 色番号4
+CONFIG_RGBLED_WIDGET_LAYER_4_COLOR=4
+
+```
 
 ---
-
-
 ### 3-4. KobitoKey_right.conf
 
 - **編集・対象ファイル**: [`config/boards/shields/KobitoKey/KobitoKey_right.conf`](./config/boards/shields/KobitoKey/KobitoKey_right.conf)
@@ -1107,7 +1119,8 @@ CONFIG_PMW3610_INVERT_X=n             # X軸（左右）の反転: 右手は「�
                                       # ★ 左手は y（反転あり）、右手は n（反転なし）で左右対称になる
                                       # ★ カーソルが左右逆に動く場合は「=y」に変更する
 CONFIG_PMW3610_SMART_ALGORITHM=y      # 省電力・追従精度のスマートアルゴリズムを有効化
-CONFIG_PMW3610_REPORT_INTERVAL_MIN=12 # 最小レポート間隔（ミリ秒）= 最大レポートレート約83Hz
+# 最小レポート間隔（ミリ秒）= 最大レポートレート約83Hz
+CONFIG_PMW3610_REPORT_INTERVAL_MIN=12
 
 # バッテリー残量通知（右手側）
 CONFIG_ZMK_BATTERY_REPORTING=y  # 右手側のバッテリー残量を左手（親機）経由でOSへ通知する
