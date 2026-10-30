@@ -30,11 +30,18 @@ Layer 3 AUTO MOUSE
   - [💡 コンボ（同時押し）の詳しい設定方法とカスタマイズ](#-コンボ同時押しの詳しい設定方法とカスタマイズ)
   - [💡 フルサイズキーボード キーコード早見表（ZMK設定用）](#-フルサイズキーボード-キーコード早見表zmk設定用)
   - [💡 初心者におすすめの定番カスタマイズ集（次期ブランチ用）](#-初心者におすすめの定番カスタマイズ集次期ブランチ用)
+- [3. トラックボール設定ファイル群（左右センサー・スクロール・オートマウス）](#3-トラックボール設定ファイル群左右センサースクロールオートマウス)
+  - [💡 トラックボールの全体像と左右の役割分担](#-トラックボールの全体像と左右の役割分担)
+  - [💡 左手スクロールの初期設定と横スクロール活用法（3つの選択肢）](#-左手スクロールの初期設定と横スクロール活用法3つの選択肢)
+  - [💡 1行ずつ精密にスクロールさせるチューニング（Excel・Word対策）](#-1行ずつ精密にスクロールさせるチューニングexcelword対策)
+  - [💡 トラックボールの高度な設計とおすすめ拡張機能（スナイパーモード・片手操作）](#-トラックボールの高度な設計とおすすめ拡張機能スナイパーモード片手操作)
+  - [💡 初心者向け：よくあるトラックボール調整方法（感度・スクロール・タイマー）](#-初心者向けよくあるトラックボール調整方法感度スクロールタイマー)
+  - [3-1. KobitoKey_left.overlay（左手スクロール・オートマウス定義）](#3-1-kobitokey_leftoverlay)
+  - [3-2. KobitoKey_right.overlay（右手カーソル移動・分割通信）](#3-2-kobitokey_rightoverlay)
+  - [3-3. KobitoKey_left.conf（システム設定・LEDインジケーター）](#3-3-kobitokey_leftconf)
 <!-- 今後追加予定:
-- 3. config/boards/shields/KobitoKey/KobitoKey_left.overlay（左手トラックボール・マトリクス定義）
-- 4. config/boards/shields/KobitoKey/KobitoKey_left.conf（左手側Bluetooth・設定）
-- 5. config/boards/shields/KobitoKey/KobitoKey_right.overlay / conf（右手側定義）
-- 6. config/boards/shields/KobitoKey/kobitokey.dtsi（共通ハードウェア定義）
+- 4. config/boards/shields/KobitoKey/KobitoKey_right.conf（右手側システム設定）
+- 5. config/boards/shields/KobitoKey/kobitokey.dtsi（共通ハードウェア・マトリクス定義）
 -->
 
 ---
@@ -586,3 +593,523 @@ layer1 {
 &mt LSHFT F  // タップで F、長押しで Shift (⇧)
 ```
 
+---
+
+### 3. トラックボール設定ファイル群（左右センサー・スクロール・オートマウス）
+
+小人キーの最大の特徴である「両手トラックボール」は、ハードウェア定義ファイル（`overlay`）とシステム設定ファイル（`conf`）によって制御されています。
+
+#### 💡 トラックボールの全体像と左右の役割分担
+
+小人キーでは、左右のトラックボールにそれぞれ別の役割が与えられています：
+
+```mermaid
+flowchart TD
+    subgraph 左手側 ["左手側（親機 / Central）"]
+        L_TB["左手トラックボール"] -->|自動変換| L_SCR["画面スクロール（縦・横）<br/>マウスホイール動作"]
+    end
+    subgraph 右手側 ["右手側（子機 / Peripheral）"]
+        R_TB["右手トラックボール"] -->|操作検知| R_AUTO["オートマウス機能起動<br/>(Layer 3へ自動切替)"]
+        R_TB -->|カーソル移動| R_PTR["通常のマウスカーソル移動"]
+        R_AUTO -->|操作停止後 5秒待機| R_RET["自動で Layer 0 へ復帰"]
+    end
+```
+
+- **左手トラックボール**: **「スクロール専用」**（上下スクロール）。Webページやコードの閲覧時にマウスホイールとして機能します（※横スクロールは誤爆防止のためデフォルトで0倍に設定）。
+- **右手トラックボール**: **「マウスカーソル移動 ＆ オートマウス」**。ボールを動かすと自動的に `Layer 3 (MOUSE)` に切り替わり、マウスボタン（左クリック・右クリック）が打てるようになります。ボール操作を止めて5秒経つと自動で通常レイヤーに戻ります。
+
+---
+
+#### 💡 左手スクロールの初期設定と横スクロール活用法（3つの選択肢）
+
+##### デフォルトの動作と考慮されていること
+- **デフォルト設定**: `zip_x_scaler 0 1`（横感度 0倍）/ `zip_y_scaler 1 15`（縦感度 1/15倍）
+- **考慮されていること（作者の意図）**:  
+  Webページや長文を縦に快適にスクロールしたい時、ボールが少しでも斜めに転がると画面が左右にガタガタ揺れる「横スクロール誤爆」が発生します。これを防ぐため、あえて横方向の感度を 0 に潰し、**「快適な縦スクロール専用ホイール」** として設計されています。
+
+##### 横スクロールを使いたい時のおすすめアプローチ
+
+| アプローチ | 設定難易度 | メリット・デメリット |
+| :--- | :--- | :--- |
+| **① OS標準のShift押しスクロール** | ★☆☆☆☆ (設定不要) | **Shiftを押しながら左手ボールを転がすだけでOS側で横スクロールになる**。キーボードの設定変更が一切不要で一番手軽。 |
+| **② 常時、縦も横も有効化する** | ★★☆☆☆ (簡単) | `zip_x_scaler 0 1` を `1 15` に書き換えるだけ。斜めに転がすと誤爆しやすい点に注意が必要。 |
+| **③ 【おすすめ】特定キーを押している間だけ「横スクロール専用」にする** | ★★★☆☆ (中級) | 普段は縦スクロール専用のまま、**指定キー（例: Fキーや親指キー）を押している間だけ「横スクロール専用（縦0倍/横有効）」に切り替える**。誤爆が完全にゼロになる最強の設定。 |
+
+###### 【解説】③の「特定キーを押している間だけ横スクロール」の仕組み
+ZMKでは、**「特定のレイヤーにいる時だけ、トラックボールの入力設定（input-processors）を上書きする」** ことができます。  
+例えば「Layer 4（横スクロールレイヤー）」を作り、そこにいる時だけ縦横の比率を逆転させます。
+
+1. **`KobitoKey_left.overlay` にレイヤー上書き定義を追加**:
+   ```dts
+   &tb_left_listener {
+       // 通常時: 縦スクロールのみ（X: 0倍, Y: 1/15倍）
+       input-processors = <&sensor_rotation_left>, <&zip_x_scaler 0 1>, <&zip_y_scaler 1 15>, <&zip_xy_to_scroll_mapper>, ...;
+
+       // ★ Layer 4 にいる時だけ縦横を逆転させる上書き設定！
+       h_scroll_override {
+           layers = <4>; // Layer 4
+           input-processors =
+               <&sensor_rotation_left>,
+               <&zip_x_scaler 1 15>, // ★ 横スクロールを有効化！
+               <&zip_y_scaler 0 1>,  // ★ 縦スクロールを0倍（停止）！
+               <&zip_xy_to_scroll_mapper>,
+               <&zip_scroll_transform INPUT_TRANSFORM_Y_INVERT>,
+               <&zip_scroll_transform INPUT_TRANSFORM_X_INVERT>;
+       };
+   };
+   ```
+2. **`KobitoKey.keymap` の Layer 3（MOUSE）に切り替えキーを配置**:
+   - 例えば Layer 3 の `F` キーの位置や親指キーに **`&mo 4`**（押している間だけ Layer 4 に切り替え）を設定します。
+   - **動作**: 普段は快適な縦スクロール。`F` キーを押しっぱなしにしている間だけ、縦がピタッと止まり「横スクロール専用」に変化します！
+
+---
+
+#### 💡 1行ずつ精密にスクロールさせるチューニング（Excel・Word対策）
+
+「ボールを触った瞬間に素早く反応（高レスポンス）してほしいが、ExcelやWordで一気に2〜3行すっ飛んでしまうのを防ぎ、1行ずつ精密にコトコト動かしたい」という場合のチューニング方法です。
+
+##### なぜ「少し触っただけで複数行ジャンプする」のか？
+1. **OSの標準仕様（特にWindows）**: Windowsは初期状態で「ホイール1ノッチで **3行スクロール**」する設定になっています。キーボード側が正しく1スクロール分を送っても、Excel側が勝手に3行飛ばしてしまいます。
+2. **CPI（感度）とスケーラーの不均衡**: `cpi = <200>` は感度が低めのため、ボールの動き出しにわずかな「遊び（不感帯）」があり、動き始めた瞬間に溜まった移動量が複数行分としてドバッと送信されてしまいます。
+
+##### 3つの解決策（黄金比チューニング）
+
+###### 解決策 1: ZMKの「高解像度 × 細分化」チューニング（黄金比）
+> **`cpi`（センサー解像度）を上げて初動をキビキビさせ、`zip_y_scaler`（割り算の分母）を大きくして1歩の移動幅を細かく刻む！**
+
+[`config/boards/shields/KobitoKey/KobitoKey_left.overlay`](./config/boards/shields/KobitoKey/KobitoKey_left.overlay) を以下のように調整します：
+
+```dts
+// ① センサー解像度を上げる（200 → 400〜600）
+// ボールに指が触れた瞬間の極小の動きを即座に感知し、初動のモタつきが消えます
+cpi = <400>; // または <600>
+
+// ② 縦スクロールのスケーラーの分母を大きくする（15 → 30〜45）
+// センサーが細かく拾った動きを「より小さく分割して」PCに送るため、1回で進む行数を最小限に抑えます
+<&zip_y_scaler 1 35>, // 数字を大きくするほど、1歩が細かく（小さく）なります
+```
+
+###### 解決策 2: 高解像度スムーズスクロール機能（ZMK最新仕様）の有効化
+マウスホイールの粗いカチカチ動作ではなく、トラックパッドのような「ピクセル単位の滑らかなスクロール」をOSに送る機能です。  
+[`config/boards/shields/KobitoKey/KobitoKey_left.conf`](./config/boards/shields/KobitoKey/KobitoKey_left.conf) に以下の **1行** を書き加えます：
+
+```ini
+# 高解像度スムーズスクロールの有効化
+CONFIG_ZMK_POINTING_SMOOTH_SCROLLING=y
+```
+- **効果**: ExcelやWord、ブラウザなどで、行単位のジャンプではなく「吸い付くような微細スクロール」ができるようになります。
+
+###### 解決策 3: OS側（Windows / Mac）のスクロール設定
+- **Windows**: 「設定」→「Bluetoothとデバイス」→「マウス」を開き、**「一度にスクロールする行数」を標準の `3` から `1` に変更** します。（※これだけでExcelやWordが確実に1行ずつ動くようになります！）
+- **macOS**: 「システム設定」→「マウス」で「スクロールの速さ」を少し左（遅め）に調整します。
+
+---
+
+#### 💡 トラックボールの高度な設計とおすすめ拡張機能（スナイパーモード・片手操作）
+
+小人キーのトラックボール制御には、作者による見事な工夫がすでに仕込まれており、さらに発展させるための拡張機能も用意されています。
+
+##### 1. 【設定済みの神設計】なぜ `excluded-positions` に `6, 7, 8` が入っているのか？
+`KobitoKey_left.overlay` の末尾にある `excluded-positions`（除外キーリスト）には、以下のキー番号が指定されています：
+- **`6` (右手U位置)** : Layer 3 では **`&mkp MB1`（左クリック）**
+- **`7` (右手I位置)** : Layer 3 では **`&mkp MB3`（中クリック/ホイール）**
+- **`8` (右手O位置)** : Layer 3 では **`&mkp MB2`（右クリック）**
+- **`30, 32, 33, 39`** : `LShift`, `LCmd`, `Space`, `Slash`
+
+> **💡 設計意図**:  
+> もしこれらが除外されていないと、**「ファイルをドラッグ＆ドロップしている最中（クリック長押し中）」に5秒タイマーが切れて通常レイヤーに戻り、クリックが勝手に外れてしまう大惨事** が起きます。  
+> マウスボタン自身を除外リストに登録しておくことで、「クリック長押し中は安心してドラッグ操作を続けられる」という完璧な配慮がなされています。
+
+##### 2. 【未設定の超便利機能 ①】スナイパーモード（精密ポインティング）
+普段は `cpi = <600>` で画面端まで素早くカーソルを動かせますが、細かい画像編集やテキストの1文字選択、細いリンクのクリック時に「行き過ぎてしまって合わせづらい」ことがあります。
+
+- **スナイパーモードの仕組み**:  
+  指定したキー（例: 親指キーや右クリック横のキー）を押している間だけ、カーソル速度を **1/3 や 1/4（例: 150〜200 CPI相当）にスローダウン** させます。
+- **実装イメージ（`KobitoKey_left.overlay` 内の上書き設定）**:
+  ```dts
+  // スナイパーレイヤー（例: Layer 5）にいる間だけ速度を 1/4 に落とす
+  sniper_mode {
+      layers = <5>;
+      input-processors = <&sensor_rotation_right>, <&zip_xy_scaler 1 4>;
+  };
+  ```
+  ボールを大きく転がしてもカーソルがピタピタと吸い付くように精密移動するため、クリエイティブ作業などで絶大な効果を発揮します。
+
+##### 3. 【未設定の超便利機能 ②】右手だけの「片手ブラウジング（右手スクロール）」
+小人キーは通常「左手でスクロール、右手でカーソル移動」の分担ですが、片手だけでWebサイトやSNSを流し見したいときに便利な機能です。
+
+- **右手スクロールの仕組み**:  
+  右手側にあるキーを押している間だけ、**右手トラックボールの移動を一時的に「スクロールホイール」に切り替えます**。
+- **実装イメージ**:
+  ```dts
+  // 片手スクロールレイヤーにいる間、右手ボールをスクロールに変換
+  r_scroll_mode {
+      layers = <5>;
+      input-processors = <&sensor_rotation_right>, <&zip_xy_to_scroll_mapper>;
+  };
+  ```
+  片手だけで「カーソル移動」「クリック」「スクロール」の全操作が完結するため、リラックス時のブラウジングが極めて快適になります。
+
+---
+
+#### 💡 初心者向け：よくあるトラックボール調整方法（感度・スクロール・タイマー）
+
+「トラックボールの動きを自分好みに調整したい！」という時は、以下の表を参考に該当ファイルの数値を変更します。
+
+| やりたいこと | 対象ファイル | 変更する箇所（プロパティ） | 調整の目安 |
+| :--- | :--- | :--- | :--- |
+| **右手のカーソル速度を変えたい** | [`KobitoKey_right.overlay`](./config/boards/shields/KobitoKey/KobitoKey_right.overlay) | `cpi = <600>;` | 速くしたい: `800`〜`1000`<br/>遅くしたい: `300`〜`400` |
+| **左手の横スクロールを常に有効にしたい** | [`KobitoKey_left.overlay`](./config/boards/shields/KobitoKey/KobitoKey_left.overlay) | `<&zip_x_scaler 0 1>` | `0 1` を `1 15` に変更する |
+| **左手のスクロール速度を変えたい** | [`KobitoKey_left.overlay`](./config/boards/shields/KobitoKey/KobitoKey_left.overlay) | `<&zip_y_scaler 1 15>` | `1 15` の `15` を大きくすると遅く、小さくすると速くなる |
+| **スクロールの向きを逆にしたい** | [`KobitoKey_left.overlay`](./config/boards/shields/KobitoKey/KobitoKey_left.overlay) | `<&zip_scroll_transform INPUT_TRANSFORM_Y_INVERT>` | この行を削除すると逆向き（Macのナチュラルスクロール等に合わせる） |
+| **オートマウスの維持時間を変えたい** | [`KobitoKey_left.overlay`](./config/boards/shields/KobitoKey/KobitoKey_left.overlay) | `<&zip_temp_layer 3 5000>;` | `5000` (5秒) を `3000` (3秒) や `2000` (2秒) に短縮 |
+| **タイピング中のマウス誤爆を防ぎたい** | [`KobitoKey_left.overlay`](./config/boards/shields/KobitoKey/KobitoKey_left.overlay) | `require-prior-idle-ms = <350>;` | 数値を大きく（`500`等）するとキー打鍵直後にマウスが反応しにくくなる |
+| **斜めに転がる角度を補正したい** | `KobitoKey_left.overlay` / `right` | `rotation-angle = <(-24)>;` / `<24>;` | 手の自然な角度に合わせてボールの進行方向角度を微調整 |
+
+---
+
+### 3-1. KobitoKey_left.overlay
+
+- **編集・対象ファイル**: [`config/boards/shields/KobitoKey/KobitoKey_left.overlay`](./config/boards/shields/KobitoKey/KobitoKey_left.overlay)
+- **役割**: 左手側マイコンのピン設定、左手トラックボール（スクロール化）、オートマウスレイヤーの制御タイマーを定義します。
+
+#### コード全文と解説（コメント付き）
+
+```dts
+#include "kobitokey.dtsi"
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <input/processors.dtsi>
+#include <input/processors/sensor_rotation.dtsi>
+
+// シリアル通信（UART）は使わないため無効化
+&xiao_serial { status = "disabled"; };
+
+// ==============================================================================
+// 【1. SPI通信ピンの設定】
+// マイコン（Seeed XIAO BLE）とトラックボールセンサー（PMW3610）を繋ぐ配線設定
+// ==============================================================================
+&pinctrl {
+    spi0_default: spi0_default {
+        group1 {
+            psels = <NRF_PSEL(SPIM_SCK, 0, 5)>,   // SCK (クロック信号)
+                    <NRF_PSEL(SPIM_MOSI, 0, 4)>,   // MOSI (データ送信)
+                    <NRF_PSEL(SPIM_MISO, 0, 4)>;   // MISO (データ受信)
+        };
+    };
+    spi0_sleep: spi0_sleep {
+        group1 {
+            psels = <NRF_PSEL(SPIM_SCK, 0, 5)>,
+                    <NRF_PSEL(SPIM_MOSI, 0, 4)>,
+                    <NRF_PSEL(SPIM_MISO, 0, 4)>;
+            low-power-enable;                     // スリープ時の省電力設定
+        };
+    };
+};
+
+// ==============================================================================
+// 【2. 左手トラックボール（PMW3610）ハードウェア定義】
+// ==============================================================================
+&spi0 {
+    status = "okay";
+    compatible = "nordic,nrf-spim";
+    pinctrl-0 = <&spi0_default>;
+    pinctrl-1 = <&spi0_sleep>;
+    pinctrl-names = "default", "sleep";
+    cs-gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;          // チップセレクト(CS)ピン
+
+    tb_left: trackball@0 {
+        status = "okay";
+        compatible = "pixart,pmw3610";             // PixArt社 PMW3610センサー
+        reg = <0>;
+        spi-max-frequency = <2000000>;
+        irq-gpios = <&gpio0 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>; // 割り込み(IRQ)ピン
+        cpi = <200>;                               // センサー感度（左手はスクロール用なので200で控えめ）
+
+        evt-type = <INPUT_EV_REL>;
+        x-input-code = <INPUT_REL_X>;
+        y-input-code = <INPUT_REL_Y>;
+    };
+};
+
+// ==============================================================================
+// 【3. トラックボールのエルゴノミクス角度補正（傾き調整）】
+// 手をハの字に置いたときにボールをまっすぐ転がせるよう、センサーの角度を回転補正
+// ==============================================================================
+/ {
+    sensor_rotation_left: sensor-rotation-left {
+        compatible = "zmk,input-processor-sensor-rotation";
+        status = "okay";
+        #input-processor-cells = <0>;
+        rotation-angle = <(-24)>;                 // 左手側は -24度 回転補正
+    };
+
+    sensor_rotation_right: sensor-rotation-right {
+        compatible = "zmk,input-processor-sensor-rotation";
+        #input-processor-cells = <0>;
+        status = "okay";
+        rotation-angle = <24>;                    // 右手側は +24度 回転補正
+    };
+};
+
+// ==============================================================================
+// 【4. 左手トラックボール入力プロセッサ：スクロール変換】
+// ボールの移動量をマウスカーソル移動ではなく、ホイールスクロールに変換します
+// ==============================================================================
+&tb_left_listener {
+    status = "okay";
+    device = <&tb_left>;
+
+    input-processors =
+            <&sensor_rotation_left>,                // ① 角度を -24度 補正
+            <&zip_x_scaler 0 1>,                    // ② 横スクロールの感度スケール
+            <&zip_y_scaler 1 15>,                   // ③ 縦スクロールの感度スケール（数値を大きくすると遅くなる）
+                                                    // ★ 【スクロール調整のコラム】
+                                                    // デフォルトの <&zip_y_scaler 1 15> は 1/15 の速度にスケーリングしています。
+                                                    // スクロールが速すぎる場合は分母を大きくし、遅すぎる場合は小さく調整します。
+            <&zip_xy_to_scroll_mapper>,             // ④ ★カーソル移動をスクロール動作へマッピング変換！
+            <&zip_scroll_transform INPUT_TRANSFORM_Y_INVERT>, // ⑤ 縦スクロール向き反転
+            <&zip_scroll_transform INPUT_TRANSFORM_X_INVERT>; // ⑥ 横スクロール向き反転
+};
+
+// ==============================================================================
+// 【5. オートマウス一時レイヤー（zip_temp_layer）の定義】
+// ==============================================================================
+/ {
+  /omit-if-no-ref/ zip_temp_layer: zip_temp_layer {
+    compatible = "zmk,input-processor-temp-layer";
+    #input-processor-cells = <2>;
+    require-prior-idle-ms = <350>; // ★ キー押下後 350ms はマウスレイヤーに入らない（タイピング誤爆防止）
+  };
+};
+
+// ==============================================================================
+// 【6. 右手トラックボール入力プロセッサ：オートマウス起動】
+// ==============================================================================
+&tb_right_listener {
+    status = "okay";
+
+    input-processors =
+        <&sensor_rotation_right>,                   // ① 角度を +24度 補正
+        <&zip_temp_layer 3 5000>;                   // ② ★ボールを動かすと Layer 3 に切り替え、操作後 5秒（5000ms）保持！
+};
+
+// ==============================================================================
+// 【7. オートマウス滞在中の除外キー設定】
+// オートマウスレイヤー（Layer 3）滞在中に以下のキーを押しても、マウスタイマーがリセットされない除外リスト
+// 【設計意図】
+// ホームポジション付近の主要キー（U, I, O）や親指キー（Space, LCmd, LShift等）を打っている最中に、
+// タイマーがリセットされてマウスレイヤーが不意に長引くのを防ぎ、スムーズな文字入力を維持します。
+// 
+// 【おすすめ拡張：スナイパーモード（一時的低CPI化）のヒント】
+// 細かいドット打ちや精密操作を行いたい場合は、次のように入ロプロセッサに
+// <&zip_x_scaler 1 2> 等を組み合わせて特定レイヤーでカーソル速度を半減させる設定も追加可能です。
+// ==============================================================================
+&zip_temp_layer {
+    excluded-positions = <
+        6   // 右手 U キー
+        7   // 右手 I キー
+        8   // 右手 O キー
+        30  // 左手最下段 LShift
+        32  // 左手親指 LCmd
+        33  // 左手親指 Space
+        39  // 右手最下段 Slash
+    >;
+};
+```
+
+---
+
+### 3-2. KobitoKey_right.overlay
+
+- **編集・対象ファイル**: [`config/boards/shields/KobitoKey/KobitoKey_right.overlay`](./config/boards/shields/KobitoKey/KobitoKey_right.overlay)
+- **役割**: 右手側マイコンのピン設定、右手トラックボールセンサー定義、左右通信（子機から親機へのデータ転送）を定義します。
+
+#### コード全文と解説（コメント付き）
+
+```dts
+#include <zephyr/dt-bindings/pinctrl/nrf-pinctrl.h>
+#include "kobitokey.dtsi"
+#include <input/processors.dtsi>
+
+// 【列オフセット設定】
+// 右手側のキー列は 5〜9 列目として扱うため、オフセット +5 を適用
+&default_transform { col-offset = <5>; };
+
+// 【SPI通信ピン設定（右手側）】
+&pinctrl {
+    spi0_default_r: spi0_default_r { group1 {
+        psels = <NRF_PSEL(SPIM_SCK, 0, 5)>,
+                <NRF_PSEL(SPIM_MOSI, 0, 4)>,
+                <NRF_PSEL(SPIM_MISO, 0, 4)>;
+    }; };
+    spi0_sleep_r: spi0_sleep_r { group1 {
+        psels = <NRF_PSEL(SPIM_SCK, 0, 5)>,
+                <NRF_PSEL(SPIM_MOSI, 0, 4)>,
+                <NRF_PSEL(SPIM_MISO, 0, 4)>;
+        low-power-enable;
+    }; };
+};
+
+// 【右手トラックボール（PMW3610）ハードウェア定義】
+&spi0 {
+    status = "okay";
+    compatible = "nordic,nrf-spim";
+    pinctrl-0 = <&spi0_default_r>;
+    pinctrl-1 = <&spi0_sleep_r>;
+    pinctrl-names = "default", "sleep";
+    cs-gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
+
+    tb_right: trackball@0 {
+        status = "okay";
+        compatible = "pixart,pmw3610";
+        reg = <0>;
+        spi-max-frequency = <2000000>;
+        irq-gpios = <&gpio0 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+        cpi = <600>;                                    // ★ センサー感度（右手はカーソル移動用なので 600 と高感度）
+        
+        evt-type = <INPUT_EV_REL>;
+        x-input-code = <INPUT_REL_X>;
+        y-input-code = <INPUT_REL_Y>;
+    };
+};
+
+// 【分割通信（子機から親機へマウス移動イベントを送信）】
+&tb_right_split {
+    device = <&tb_right>;
+
+    // ボールの物理的取り付け向きに合わせて Y軸（上下）の進行方向を反転
+    input-processors = <&zip_xy_transform INPUT_TRANSFORM_Y_INVERT>;
+};
+```
+---
+
+### 3-3. KobitoKey_left.conf
+
+- **編集・対象ファイル**: [`config/boards/shields/KobitoKey/KobitoKey_left.conf`](./config/boards/shields/KobitoKey/KobitoKey_left.conf)
+- **役割**: 左手側マイコンのシステム機能、ドライバ有効化、LEDインジケーターの色やバッテリー警告しきい値を設定します。
+
+#### コード全文と解説（コメント付き）
+
+```ini
+# ==============================================================================
+# 【ファイル概要】KobitoKey_left.conf
+# 左手側マイコン（Seeed XIAO BLE）のシステム機能設定ファイルです。
+# ZMK ファームウェアのどの機能を有効/無効にするかを「CONFIG_〇〇=y/n」形式で設定します。
+# このファイルは左手側（親機: Central）ビルド時のみ読み込まれます。
+# 「=y」で有効、「=n」で無効です。
+# ==============================================================================
+
+# キーボードの識別名（OS上やBluetooth接続先の一覧に表示される名前）
+CONFIG_ZMK_KEYBOARD_NAME="KobitoKey"
+
+# ポインティングデバイス（トラックボール・マウス）機能の有効化
+CONFIG_ZMK_POINTING=y         # ZMK のポインティングデバイスサブシステムを有効化
+CONFIG_NFCT_PINS_AS_GPIOS=y   # NFCピンを汎用GPIO（SPI等）として使用できるよう解放
+CONFIG_ZMK_BLE=y              # Bluetooth Low Energy を有効化（必須）
+CONFIG_ZMK_MOUSE=y            # マウスHID（クリック・ホイール）機能を有効化
+
+# ZMK Studio: Web ブラウザからリアルタイムにキー設定を変更できる機能
+# ★ 対応ファームウェアが必要。build.yaml の snippet: studio-rpc-usb-uart と合わせて使用
+CONFIG_ZMK_STUDIO=y           # ZMK Studio を有効化（USB接続時にブラウザから設定変更可能）
+CONFIG_ZMK_STUDIO_LOCKING=n   # Studioのロック機能を無効化（毎回アンロック操作が不要になる）
+
+# SPI通信と入力サブシステム（トラックボール通信に必要）
+CONFIG_SPI=y                  # SPI通信を有効化（PMW3610センサーとの通信に使用）
+CONFIG_INPUT=y                # 入力サブシステムを有効化（トラックボールの入力処理に必要）
+
+# PMW3610 光学センサードライバの設定
+CONFIG_PMW3610=y                      # PMW3610センサードライバを有効化
+CONFIG_PMW3610_INVERT_X=y             # X軸（左右）の入力方向を反転
+                                      # ★ カーソルが左右逆に動く場合は「=n」にする
+CONFIG_PMW3610_SMART_ALGORITHM=y      # 省電力・追従精度の「スマートアルゴリズム」を有効化
+CONFIG_PMW3610_REPORT_INTERVAL_MIN=12 # 最小レポート間隔（ミリ秒）= 最大レポートレート約83Hz
+                                      # ★ 小さくするほど応答が速くなるが電力消費も増える
+
+# トラックボールの傾き（角度）補正機能
+CONFIG_SENSOR_ROTATION=y      # センサー回転補正を有効化（overlay の rotation-angle で角度指定）
+
+# バッテリー残量の通知・取得設定
+CONFIG_ZMK_BATTERY_REPORTING=y                      # バッテリー残量のBLEでの通知を有効化
+CONFIG_ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_PROXY=y   # 右手（子機）のバッテリー残量を左手経由でOSに通知
+CONFIG_ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_FETCHING=y # 左手（親機）が右手のバッテリー残量を取得する
+
+# 左右分割キーボードの役割設定
+CONFIG_ZMK_SPLIT_ROLE_CENTRAL=y   # ★ 左手側が「親機（Central）」= USBやBTでPCと繋がる側
+
+# ==============================================================================
+# RGB LED インジケーターウィジェット設定
+# 小人キーには現在のレイヤーやバッテリー残量を色で知らせる小さなLEDがあります。
+# ==============================================================================
+CONFIG_RGBLED_WIDGET=y                # RGB LED インジケーターウィジェットを有効化
+CONFIG_RGBLED_WIDGET_INTERVAL_MS=1000 # LEDの更新間隔（ミリ秒）= 1秒ごとに状態を更新
+
+# バッテリー残量による LED 色変化のしきい値（%単位）
+CONFIG_RGBLED_WIDGET_BATTERY_LEVEL_HIGH=60     # 60%以上: 「高残量」色（緑系）で点灯
+CONFIG_RGBLED_WIDGET_BATTERY_LEVEL_LOW=30      # 30%以下: 「低残量」色（黄・橙系）で点灯
+CONFIG_RGBLED_WIDGET_BATTERY_LEVEL_CRITICAL=10 # 10%以下: 「警告」色（赤系）で点灯
+
+# レイヤーごとの LED 点灯色番号
+# ★ 色番号は zmk-rgbled-widget の仕様に依存。0=消灯、各番号の実際の色はウィジェット仕様を参照
+# [https://github.com/caksoylar/zmk-rgbled-widget/tree/main#configuration-details](https://github.com/caksoylar/zmk-rgbled-widget/tree/main#configuration-details)
+#  CONFIG_RGBLED_WIDGET_LAYER_COLORの数値は
+#  0→黒(無点灯)
+#  1→赤
+#  2→緑
+#  3→黄色
+#  4→青
+#  5→マゼンタ
+#  6→シアン
+#  7→白
+CONFIG_RGBLED_WIDGET_SHOW_LAYER_COLORS=y  # レイヤーに応じたLED色切り替えを有効化
+CONFIG_RGBLED_WIDGET_LAYER_0_COLOR=0      # Layer 0（通常レイヤー）: 消灯
+CONFIG_RGBLED_WIDGET_LAYER_1_COLOR=4      # Layer 1（NUMBERレイヤー）: 色番号4
+CONFIG_RGBLED_WIDGET_LAYER_2_COLOR=4      # Layer 2（FUNCTIONレイヤー）: 色番号4
+CONFIG_RGBLED_WIDGET_LAYER_3_COLOR=6      # Layer 3（MOUSEレイヤー）: 色番号6（青系）
+CONFIG_RGBLED_WIDGET_LAYER_4_COLOR=4      # Layer 4（予備レイヤー）: 色番号4
+
+---
+
+
+### 3-4. KobitoKey_right.conf
+
+- **編集・対象ファイル**: [`config/boards/shields/KobitoKey/KobitoKey_right.conf`](./config/boards/shields/KobitoKey/KobitoKey_right.conf)
+- **役割**: 右手側マイコンのシステム機能、ドライバ有効化、および左右分割の子機（Peripheral）としての動作を設定します。
+
+#### コード全文と解説（コメント付き）
+
+```ini
+# ==============================================================================
+# 【ファイル概要】KobitoKey_right.conf
+# 右手側マイコン（Seeed XIAO BLE）のシステム機能設定ファイルです。
+# 左手側（KobitoKey_left.conf）と比べ、右手側（子機: Peripheral）に固有の
+# 最小限の設定のみが記述されています。
+# 「=y」で有効、「=n」で無効です。
+#
+# 【左手との主な違い】
+# - ZMK Studio, LED ウィジェット, バッテリー取得設定は左手（親機）側のみに存在
+# - 右手は「子機（Peripheral）」として動作し、PCとは直接繋がらない
+# - PMW3610_INVERT_X の設定が左右で異なる（右手は n = 反転なし）
+# ==============================================================================
+
+# ポインティングデバイス（トラックボール・マウス）機能の有効化
+CONFIG_ZMK_POINTING=y        # ZMK のポインティングデバイスサブシステムを有効化
+CONFIG_NFCT_PINS_AS_GPIOS=y  # NFCピンを汎用GPIO（SPI等）として使用できるよう解放
+CONFIG_ZMK_BLE=y             # Bluetooth Low Energy を有効化（左手親機との通信に必要）
+CONFIG_ZMK_MOUSE=y           # マウスHID（クリック・ホイール）機能を有効化
+
+# SPI通信と入力サブシステム（トラックボール通信に必要）
+CONFIG_SPI=y                 # SPI通信を有効化（PMW3610センサーとの通信に使用）
+CONFIG_INPUT=y               # 入力サブシステムを有効化
+
+# PMW3610 光学センサードライバの設定
+CONFIG_PMW3610=y                      # PMW3610センサードライバを有効化
+CONFIG_PMW3610_INVERT_X=n             # X軸（左右）の反転: 右手は「反転なし（n）」
+                                      # ★ 左手は y（反転あり）、右手は n（反転なし）で左右対称になる
+                                      # ★ カーソルが左右逆に動く場合は「=y」に変更する
+CONFIG_PMW3610_SMART_ALGORITHM=y      # 省電力・追従精度のスマートアルゴリズムを有効化
+CONFIG_PMW3610_REPORT_INTERVAL_MIN=12 # 最小レポート間隔（ミリ秒）= 最大レポートレート約83Hz
+
+# バッテリー残量通知（右手側）
+CONFIG_ZMK_BATTERY_REPORTING=y  # 右手側のバッテリー残量を左手（親機）経由でOSへ通知する
+
+---
