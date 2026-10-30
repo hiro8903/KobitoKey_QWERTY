@@ -1,48 +1,83 @@
-#include <zephyr/dt-bindings/pinctrl/nrf-pinctrl.h>
-#include "kobitokey.dtsi"
-#include <input/processors.dtsi>
+// ==============================================================================
+// 【ファイル概要】KobitoKey_right.overlay
+// 右手側マイコン（Seeed XIAO BLE）専用のハードウェア定義ファイルです。
+// 右手トラックボール（PMW3610センサー）の配線設定と、
+// 右手から左手（親機）へのBluetooth経由データ転送設定を定義します。
+// このファイルは右手側がビルド対象のときだけ読み込まれます。
+// ==============================================================================
 
-/* 列オフセット */
+// ヘッダーファイルのインクルード
+#include <zephyr/dt-bindings/pinctrl/nrf-pinctrl.h>  // nRF52840 ピン設定定義
+#include "kobitokey.dtsi"                             // 左右共通ハードウェア定義（マトリクス等）
+#include <input/processors.dtsi>                      // ZMK標準入力プロセッサ
+
+// ==============================================================================
+// 【1. キーマトリクスの列オフセット設定】
+// 小人キーは左右それぞれ5列（0〜4）の独立したマトリクスを持ちますが、
+// キーマップ上では左右合わせて10列（0〜9）として扱います。
+// 右手側の物理列（0〜4）をキーマップ上の列（5〜9）にマッピングするためのオフセットです。
+// ==============================================================================
+/* 列オフセット: 右手側の列を +5 ずらして左右10列マトリクスとして扱う */
 &default_transform { col-offset = <5>; };
 
+// ==============================================================================
+// 【2. SPI 通信ピン（pinctrl）の設定】
+// 右手マイコンとトラックボールセンサー（PMW3610）をSPIで繋ぐピン番号の定義です。
+// 左手側と同じピン番号（各マイコンで独立した設定になるため問題なし）。
+// ==============================================================================
 &pinctrl {
     spi0_default_r: spi0_default_r { group1 {
-        psels = <NRF_PSEL(SPIM_SCK,  0, 5)>,
-                <NRF_PSEL(SPIM_MOSI, 0, 4)>,
-                <NRF_PSEL(SPIM_MISO, 0, 4)>;
+        psels = <NRF_PSEL(SPIM_SCK,  0, 5)>,  // SCK : クロック信号ピン
+                <NRF_PSEL(SPIM_MOSI, 0, 4)>,  // MOSI: データ送信ピン
+                <NRF_PSEL(SPIM_MISO, 0, 4)>;  // MISO: データ受信ピン
     }; };
     spi0_sleep_r: spi0_sleep_r { group1 {
         psels = <NRF_PSEL(SPIM_SCK,  0, 5)>,
                 <NRF_PSEL(SPIM_MOSI, 0, 4)>,
                 <NRF_PSEL(SPIM_MISO, 0, 4)>;
-        low-power-enable;
+        low-power-enable; // スリープ時に省電力モードを有効化（バッテリー節約）
     }; };
 };
 
+// ==============================================================================
+// 【3. 右手トラックボール（PMW3610）ハードウェア定義】
+// 右手トラックボールは「マウスカーソル移動専用」として設定されています。
+// ==============================================================================
 &spi0 {
     status = "okay";
     compatible = "nordic,nrf-spim";
     pinctrl-0 = <&spi0_default_r>;
     pinctrl-1 = <&spi0_sleep_r>;
     pinctrl-names = "default", "sleep";
-    cs-gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
+    cs-gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;  // CS（チップセレクト）ピン
 
     tb_right: trackball@0 {
         status = "okay";
-        compatible = "pixart,pmw3610";
+        compatible = "pixart,pmw3610";       // PixArt PMW3610 ドライバを使用
         reg = <0>;
-        spi-max-frequency = <2000000>;
-        irq-gpios = <&gpio0 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-        cpi = <600>;
-        
-        evt-type = <INPUT_EV_REL>;
-        x-input-code = <INPUT_REL_X>;
-        y-input-code = <INPUT_REL_Y>;
+        spi-max-frequency = <2000000>;       // SPI通信の最大クロック周波数: 2MHz
+        irq-gpios = <&gpio0 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>; // IRQ割り込みピン
+        cpi = <600>;                         /* センサー感度（CPI: Counts Per Inch）
+                                               ★ 調整ポイント: 右手はカーソル移動用なので左手より高めに設定。
+                                               ★ 速すぎる場合: 300〜400 に下げる
+                                               ★ 遅すぎる場合: 800〜1000 に上げる
+                                               ★ スナイパーモード（精密操作）は別レイヤーで低CPI運用が可能 */
+
+        evt-type = <INPUT_EV_REL>;           // イベント種別: 相対移動（マウス移動）
+        x-input-code = <INPUT_REL_X>;        // X軸の入力コード
+        y-input-code = <INPUT_REL_Y>;        // Y軸の入力コード
     };
 };
 
+// ==============================================================================
+// 【4. 右手トラックボールの分割通信設定（子機 → 親機へのデータ転送）】
+// 右手側のトラックボール入力を、Bluetooth経由で左手（親機）に送信する設定です。
+// kobitokey.dtsi で定義された tb_right_split（分割入力デバイス）に接続します。
+// ==============================================================================
 &tb_right_split {
-    device = <&tb_right>;
+    device = <&tb_right>;  // 右手センサーを分割通信デバイスに接続
 
+    // ★ ボールの物理的な取り付け向きに合わせて Y軸（上下）の進行方向を反転
+    // ★ カーソルが逆方向に動いてしまう場合は、この行を削除する
     input-processors = <&zip_xy_transform INPUT_TRANSFORM_Y_INVERT>;
 };

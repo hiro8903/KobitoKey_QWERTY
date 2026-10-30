@@ -1,16 +1,31 @@
-#include "kobitokey.dtsi"
-#include <zephyr/dt-bindings/input/input-event-codes.h>
-#include <input/processors.dtsi>
-#include <input/processors/sensor_rotation.dtsi>
+// ==============================================================================
+// 【ファイル概要】KobitoKey_left.overlay
+// 左手側マイコン（Seeed XIAO BLE）専用のハードウェア定義ファイルです。
+// 左手トラックボール（PMW3610センサー）の配線設定、スクロール変換処理、
+// 右手トラックボールのオートマウス機能（Layer 3 自動切り替え＆タイマー）を定義します。
+// このファイルは左手側がビルド対象のときだけ読み込まれます。
+// ==============================================================================
 
+// ヘッダーファイルのインクルード
+#include "kobitokey.dtsi"                                // 左右共通ハードウェア定義（マトリクス等）
+#include <zephyr/dt-bindings/input/input-event-codes.h>  // 入力イベントコード定義（REL_X, REL_Y等）
+#include <input/processors.dtsi>                         // ZMK標準入力プロセッサ（scaler, scroll_mapper等）
+#include <input/processors/sensor_rotation.dtsi>         // トラックボール角度補正プロセッサ
+
+// シリアル通信（UART）は SPI と排他のため無効化
 &xiao_serial { status = "disabled"; };
 
+// ==============================================================================
+// 【1. SPI 通信ピン（pinctrl）の設定】
+// マイコンとトラックボールセンサー（PMW3610）をSPIで繋ぐピン番号の定義です。
+// 通常動作時（default）とスリープ時（sleep）の両方を定義します。
+// ==============================================================================
 &pinctrl {
     spi0_default: spi0_default {
         group1 {
-            psels = <NRF_PSEL(SPIM_SCK,  0, 5)>,
-                    <NRF_PSEL(SPIM_MOSI, 0, 4)>,
-                    <NRF_PSEL(SPIM_MISO, 0, 4)>;
+            psels = <NRF_PSEL(SPIM_SCK,  0, 5)>,  // SCK : クロック信号ピン
+                    <NRF_PSEL(SPIM_MOSI, 0, 4)>,  // MOSI: データ送信ピン
+                    <NRF_PSEL(SPIM_MISO, 0, 4)>;  // MISO: データ受信ピン
         };
     };
     spi0_sleep: spi0_sleep {
@@ -18,87 +33,128 @@
             psels = <NRF_PSEL(SPIM_SCK,  0, 5)>,
                     <NRF_PSEL(SPIM_MOSI, 0, 4)>,
                     <NRF_PSEL(SPIM_MISO, 0, 4)>;
-            low-power-enable;
+            low-power-enable; // スリープ時に省電力モードを有効化（バッテリー節約）
         };
     };
 };
 
+// ==============================================================================
+// 【2. 左手トラックボール（PMW3610）ハードウェア定義】
+// PixArt社製の PMW3610 光学センサーの接続設定です。
+// ==============================================================================
 &spi0 {
     status = "okay";
     compatible = "nordic,nrf-spim";
     pinctrl-0 = <&spi0_default>;
     pinctrl-1 = <&spi0_sleep>;
     pinctrl-names = "default", "sleep";
-    cs-gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
+    cs-gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;  // CS（チップセレクト）ピン: センサー通信の開始合図
 
     tb_left: trackball@0 {
         status = "okay";
-        compatible = "pixart,pmw3610";
+        compatible = "pixart,pmw3610";       // PixArt PMW3610 ドライバを使用
         reg = <0>;
-        spi-max-frequency = <2000000>;
-        irq-gpios = <&gpio0 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-        cpi = <200>; /* センサー感度 */
+        spi-max-frequency = <2000000>;       // SPI通信の最大クロック周波数: 2MHz
+        irq-gpios = <&gpio0 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>; // IRQ割り込みピン
+        cpi = <200>; /* センサー感度（CPI: Counts Per Inch）
+                        ★ 調整ポイント: 左手はスクロール専用のため低めに設定。
+                        ★ 数字を大きくすると感度UP（キビキビ反応）、小さくすると感度DOWN（ゆっくり）。
+                        ★ 精密スクロールを求める場合は 400〜600 に上げ、zip_y_scaler の分母も大きくする。
+                        ★ 参考: 400(高感度/推奨) / 200(デフォルト) */
 
-
-        evt-type = <INPUT_EV_REL>;
-        x-input-code = <INPUT_REL_X>;
-        y-input-code = <INPUT_REL_Y>;
+        evt-type = <INPUT_EV_REL>;           // イベント種別: 相対移動（マウス移動と同じ形式）
+        x-input-code = <INPUT_REL_X>;        // X軸の入力コード
+        y-input-code = <INPUT_REL_Y>;        // Y軸の入力コード
     };
 };
 
+// ==============================================================================
+// 【3. エルゴノミクス角度補正（手のハの字に合わせた傾き）】
+// 手を自然な位置（ハの字）に置いたとき、ボールをまっすぐ転がしても斜めに進んでしまうことがあります。
+// ここでセンサーの出力を指定した角度だけ回転させて補正します。
+// ==============================================================================
 / {
     sensor_rotation_left: sensor-rotation-left {
         compatible = "zmk,input-processor-sensor-rotation";
         status = "okay";
         #input-processor-cells = <0>;
-        rotation-angle = <(-24)>;
+        rotation-angle = <(-24)>; // 左手側は -24度 回転補正（手の向きに合わせて微調整可能）
     };
 
     sensor_rotation_right: sensor-rotation-right {
         compatible = "zmk,input-processor-sensor-rotation";
         #input-processor-cells = <0>;
         status = "okay";
-        rotation-angle = <24>;
+        rotation-angle = <24>; // 右手側は +24度 回転補正（左手と対称）
     };
 };
 
+// ==============================================================================
+// 【4. 左手トラックボールの入力処理チェーン（スクロール変換）】
+// ボールの XY 移動を「マウスホイールのスクロール動作」に変換する処理のパイプラインです。
+// 上から順番に処理が適用されます。
+// ==============================================================================
 &tb_left_listener {
     status = "okay";
-    device = <&tb_left>;
+    device = <&tb_left>;   // 左手センサーをこのリスナーに接続
 
     input-processors =
-            <&sensor_rotation_left>,
-            <&zip_x_scaler 0 1>,
-            <&zip_y_scaler 1 15>,
-            <&zip_xy_to_scroll_mapper>,
-            <&zip_scroll_transform INPUT_TRANSFORM_Y_INVERT>,
-            <&zip_scroll_transform INPUT_TRANSFORM_X_INVERT>;
+            <&sensor_rotation_left>,                           // ① 角度補正（-24度回転）
+            <&zip_x_scaler 0 1>,                               // ② 横（X軸）の感度倍率
+                                                               //    ★ 「0 ÷ 1 = 0倍」= 横スクロールを無効化
+                                                               //    ★ 横スクロールを有効にしたい場合は「1 15」に変更
+                                                               //    ★ ※詳細は README の「横スクロール活用法」参照
+            <&zip_y_scaler 1 15>,                              // ③ 縦（Y軸）の感度倍率
+                                                               //    ★ 「1 ÷ 15」倍 = スクロールを適度に減速
+                                                               //    ★ 分母を大きくするほど1歩が細かくなる（Excel対策: 35〜45 推奨）
+            <&zip_xy_to_scroll_mapper>,                        // ④ ★ XY移動をスクロールホイールに変換（核心）
+            <&zip_scroll_transform INPUT_TRANSFORM_Y_INVERT>,  // ⑤ 縦スクロールの向きを反転
+            <&zip_scroll_transform INPUT_TRANSFORM_X_INVERT>;  // ⑥ 横スクロールの向きを反転
     };
 
+// ==============================================================================
+// 【5. オートマウス一時レイヤー（zip_temp_layer）の定義】
+// 右手トラックボールを動かした時に、一時的に Layer 3（マウスレイヤー）へ自動切り替えし、
+// 操作が止まってから指定時間後に元のレイヤーへ自動復帰する処理の定義です。
+// ==============================================================================
 / {
   /omit-if-no-ref/ zip_temp_layer: zip_temp_layer {
     compatible = "zmk,input-processor-temp-layer";
     #input-processor-cells = <2>;
-    require-prior-idle-ms = <350>; /* キー押下後、何msオートマウスレイヤに入らないようにするか、誤爆防止 */
+    require-prior-idle-ms = <350>; /* ★ キー打鍵後 350ms はマウスレイヤーに入らない（タイピング中の誤爆防止）
+                                       ★ 誤爆が多い場合は 500 に増やす。反応が遅いと感じたら 200 に減らす */
   };
 };
 
+// ==============================================================================
+// 【6. 右手トラックボールの入力処理（オートマウス起動）】
+// 右手ボールを動かすと角度補正したうえで Layer 3 へ自動切り替え、
+// 指定ミリ秒（5000ms = 5秒）操作が止まると Layer 0 へ自動復帰します。
+// ==============================================================================
 &tb_right_listener {
     status = "okay";
 
     input-processors =
-        <&sensor_rotation_right>,
-        <&zip_temp_layer 3 5000>; /* オートマウスレイヤーの指定とトラボ操作及びマウスボタン押下後に滞留する時間 */
+        <&sensor_rotation_right>,         // ① 角度補正（+24度回転）
+        <&zip_temp_layer 3 5000>;         /* ② ★ オートマウスレイヤー設定
+                                               「3」= 切り替え先レイヤー番号（Layer 3: MOUSE）
+                                               「5000」= 操作停止後に待機するミリ秒数（5秒）
+                                               ★ 短くしたい: 2000〜3000 / もっと維持したい: 8000 */
 };
 
+// ==============================================================================
+// 【7. オートマウス中の除外キー設定】
+// マウスレイヤー（Layer 3）滞在中、以下のキーを押してもオートマウスのタイマーがリセットされません。
+// 「ドラッグ中にタイマーが切れてクリックが外れる」という問題を防ぐための重要設定です。
+// ==============================================================================
 &zip_temp_layer {
     excluded-positions = <
-        6
-        7
-        8
-        30
-        32
-        33
-        39
+        6   // Layer 3 での 左クリック（&mkp MB1）の位置 → クリック中もタイマーをリセットしない
+        7   // Layer 3 での 中クリック（&mkp MB3）の位置
+        8   // Layer 3 での 右クリック（&mkp MB2）の位置
+        30  // 左手最下段左端（Left Shift）の位置
+        32  // 左手親指外側（Left Cmd）の位置
+        33  // 左手親指中央（Space）の位置
+        39  // 右手最下段右端（Slash / Alt）の位置
     >;
 };
