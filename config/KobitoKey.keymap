@@ -145,12 +145,12 @@
             label = "MOUSE";
             bindings = <
 // [1行目]
-// 左手: (透過)                                 | 右手: 進む (MB5), 左クリック (MB1), 中クリック/ホイール (MB3), 右クリック (MB2), (透過)
-&trans     &trans  &trans    &trans    &trans  &mkp MB5      &mkp MB1  &mkp MB3  &mkp MB2  &trans
+// 左手: (透過)                                 | 右手: 進む (Cmd+右), 左クリック (MB1), 中クリック/ホイール (MB3), 右クリック (MB2), (透過)
+&trans     &trans  &trans    &trans    &trans  &kp LG(RIGHT) &mkp MB1  &mkp MB3  &mkp MB2  &trans
 
 // [2行目]
-// 左手: (透過)                                 | 右手: 戻る (MB4), (透過), (透過), (透過), (透過)
-&trans     &trans  &trans    &trans    &trans  &mkp MB4      &trans    &trans    &trans    &trans
+// 左手: (透過)                                 | 右手: 戻る (Cmd+左), (透過), (透過), (透過), (透過)
+&trans     &trans  &trans    &trans    &trans  &kp LG(LEFT)  &trans    &trans    &trans    &trans
 
 // [3行目]
 // 左手・右手: すべて透過
