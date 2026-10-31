@@ -177,22 +177,25 @@
         };
 
         // ----------------------------------------------------------------------
-        // ■ Layer 4: layer4 [SCROLL]（Iキー長押し中のスクロール用レイヤー）
+        // ■ Layer 4: layer4 [SCROLL ＆ SHORTCUTS]（右手のみでの操作用）
+        // タブの移動や作成・削除
+        // 仮想デスクトップの移動
         // ----------------------------------------------------------------------
         layer4 {
             label = "SCROLL";
             bindings = <
-// [1行目] すべて透過（Iキーを長押ししている間、他のキーは通常のLayer 0の動きを維持）
-&trans     &trans    &trans    &trans    &trans   &trans     &trans     &trans     &trans     &trans
-
+// [1行目]
+// 左手: (透過)                                    | 右手: タブ復活(Cmd+Shift+T) | 前のタブ(Ctrl+Shift+Tab) | 透過(I 長押し中) | 次のタブ(Ctrl+Tab) | (透過)
+&trans     &trans    &trans    &trans    &trans   &kp LG(LS(T))  &kp LC(LS(TAB))  &trans    &kp LC(TAB)      &trans
 // [2行目]
-&trans     &trans    &trans    &trans    &trans   &trans     &trans     &trans     &trans     &trans
-
+ 左手: (透過)                                      | 右手:新規タブ(Cmd+T) | (透過)|(透過)|(透過)|(透過)|
+&trans     &trans    &trans    &trans    &trans   &kp LG(T)         &trans  &trans  &trans  &trans
 // [3行目]
-&trans     &trans    &trans    &trans    &trans   &trans     &trans     &trans     &trans     &trans
-
+ 左手: (透過)                                      | 右手:タブ削除(Cmd+W) | (透過)|(透過)|(透過)|(透過)|
+&trans     &trans    &trans    &trans    &trans   &kp LG(W)         &trans  &trans  &trans  &trans
 // [4行目]
-&trans     &trans    &trans    &trans    &trans   &trans     &trans     &trans     &trans     &trans
+ 左手: (透過)                                      | 右手:ウィンドウ一覧表示(Ctrl上)|仮想デスクトップ左に移動(Ctrl左) | 仮想デスクトップ右に移動(Ctrl右) |(透過)|(透過)|
+&trans     &trans    &trans    &trans    &trans   &kp LC(UP)  &kp LC(LEFT)  &kp LC(RIGHT)  &trans  &trans
             >;
         };
     };
