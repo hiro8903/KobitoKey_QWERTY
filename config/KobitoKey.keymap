@@ -69,8 +69,8 @@
         default_layer {
             bindings = <
 // [1行目: 最上段]
-// 左手: Q, W, E, R, T                          | 右手: Y, U, I, O, P
-&kp Q      &kp W     &kp E     &kp R        &kp T      &kp Y     &kp U        &kp I      &kp O      &kp P
+// 左手: Q, W, E, R, T                          | 右手: Y, U, [長押し Layer4 / 短押し I], O, P
+&kp Q      &kp W     &kp E     &kp R        &kp T      &kp Y     &kp U        &lt 4 I    &kp O      &kp P
 
 // [2行目: ホームポジション段]
 // 左手: A, S, D, F, G                          | 右手: H, J, K, L, ; (セミコロン)
@@ -159,6 +159,26 @@
 // [4行目]
 // 左手: 左Shift, (透過), 左Cmd, 左Alt, [Layer 0に戻る] | 右手: (透過), (透過), (透過), [Layer 0に戻る], 右Alt
 &kp LSHFT  &trans  &kp LCMD  &kp LALT  &to 0   &trans  &trans    &trans    &to 0     &kp RALT
+            >;
+        };
+
+        // ----------------------------------------------------------------------
+        // ■ Layer 4: layer4 [SCROLL]（Iキー長押し中のスクロール用レイヤー）
+        // ----------------------------------------------------------------------
+        layer4 {
+            label = "SCROLL";
+            bindings = <
+// [1行目] すべて透過（Iキーを長押ししている間、他のキーは通常のLayer 0の動きを維持）
+&trans     &trans    &trans    &trans    &trans   &trans     &trans     &trans     &trans     &trans
+
+// [2行目]
+&trans     &trans    &trans    &trans    &trans   &trans     &trans     &trans     &trans     &trans
+
+// [3行目]
+&trans     &trans    &trans    &trans    &trans   &trans     &trans     &trans     &trans     &trans
+
+// [4行目]
+&trans     &trans    &trans    &trans    &trans   &trans     &trans     &trans     &trans     &trans
             >;
         };
     };
