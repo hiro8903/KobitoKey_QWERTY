@@ -191,10 +191,10 @@
 // 左手: (透過)                                      | 右手:新規タブ(Cmd+T) | (透過)|(透過)|(透過)|(透過)|
 &trans     &trans    &trans    &trans    &trans   &kp LG(T)         &trans  &trans  &trans  &trans
 // [3行目]
- 左手: (透過)                                      | 右手:タブ削除(Cmd+W) | (透過)|(透過)|(透過)|(透過)|
+// 左手: (透過)                                      | 右手:タブ削除(Cmd+W) | (透過)|(透過)|(透過)|(透過)|
 &trans     &trans    &trans    &trans    &trans   &kp LG(W)         &trans  &trans  &trans  &trans
 // [4行目]
- 左手: (透過)                                      | 右手:ウィンドウ一覧表示(Ctrl上)|仮想デスクトップ左に移動(Ctrl左) | 仮想デスクトップ右に移動(Ctrl右) |(透過)|(透過)|
+// 左手: (透過)                                      | 右手:ウィンドウ一覧表示(Ctrl上)|仮想デスクトップ左に移動(Ctrl左) | 仮想デスクトップ右に移動(Ctrl右) |(透過)|(透過)|
 &trans     &trans    &trans    &trans    &trans   &kp LC(UP)  &kp LC(LEFT)  &kp LC(RIGHT)  &trans  &trans
             >;
         };
