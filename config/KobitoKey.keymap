@@ -16,7 +16,7 @@
 
 / {
     // ==========================================================================
-        // 【カスタムビヘイビアの定義】
+    // 【カスタムビヘイビアの定義】
     // ==========================================================================
     behaviors {
         // ★ 短押しでマウスボタン（&mkp）、長押しでレイヤー移動（&mo）を行うホールドタップ
@@ -26,6 +26,33 @@
             flavor = "balanced";
             tapping-term-ms = <200>;
             bindings = <&mo>, <&mkp>;
+        };
+        // --- 2つで1セット ----------------------------
+        // 短押しでウィンドウ右寄せ（Cmd + Opt + 右矢印）を送るマクロ
+        macro_win_right: macro_win_right {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&kp LGUI &kp LALT &kp RIGHT>;
+        };
+
+        // 短押しで上記マクロ、長押しで右Shift（または左Shift）になるMod-Tap
+        mt_win_right: modifier_tap_win_right {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <200>;
+            bindings = <&kp>, <&macro_win_right>; // 長押しで第一引数(Shift等)、短押しで第二引数(マクロ)
+        };
+        // -------------------------------------------
+
+
+        // 短押しで Layer 0 へ復帰、長押しで Layer 5（DPI精密操作）へ一時切り替え
+        ht_dpi_to0: hold_tap_dpi_to0 {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "tap-preferred";
+            tapping-term-ms = <200>;
+            bindings = <&mo>, <&to>; // 長押しで第一引数(&mo 5)、短押しで第二引数(&to 0)
         };
     };
 
@@ -186,16 +213,16 @@
 &trans     &trans  &trans    &trans    &trans  &kp LG(RIGHT) &mkp MB1  &lt_mb3 4 MB3  &mkp MB2  &trans
 
 // [2行目]
-// 左手: (透過)                                 | 右手: 戻る (Cmd+左), (透過), (透過), (透過), (透過)
-&trans     &trans  &trans    &trans    &trans  &kp LG(LEFT)  &trans    &trans    &trans    &trans
+// 左手: (透過)                               | 右手: 戻る (Cmd+左), コピー(Cmd+C), ペースト(Cmd+V), 検索(Cmd+F), [長押し DPIホールド/短押し layer0に戻る]
+&trans     &trans  &trans    &trans    &trans  &kp LG(LEFT)  &kp LG(C) &kp LG(V)      &kp LG(F)  &ht_dpi_to0 5 0
 
 // [3行目]
-// 左手・右手: すべて透過
-&trans     &trans  &trans    &trans    &trans  &trans  &trans    &trans    &trans    &trans
+// 左手: (透過)                               | 右手: アプリ切替(Cmd+TAB), 切り取り(Cmd+X), クリップボード(Cmd+Opt+V), URL選択(Cmd+L), [長押し DPIホールド/短押し layer0に戻る]
+&trans     &trans  &trans    &trans    &trans  &kp LG(TAB)   &kp LG(X) &kp LG(LA(V))  &kp LG(L)  &ht_dpi_to0 5 0
 
 // [4行目]
-// 左手: 左Shift, (透過), 左Cmd, 左Alt, [Layer 0に戻る] | 右手: (透過), (透過), (透過), [Layer 0に戻る], 右Alt
-&kp LSHFT  &trans  &kp LCMD  &kp LALT  &to 0   &trans  &trans    &trans    &to 0     &kp RALT
+// 左手: 左Shift, (透過), 左Cmd, 左Alt, [Layer 0に戻る] | 右手: ウィンドウ最大化(Cmd+Opt+F), ウィンドウ左寄せ(Cmd+Opt+←), [長押し:Shift / 短押し:ウィンドウ右寄せ(Cmd+Opt+→)], ウィンドウ左上寄せ(Cmd+LC(RIGHT)), ウィンドウ右上寄せ(Cmd+LC(RIGHT))
+&kp LSHFT  &trans  &kp LCMD  &kp LALT  &to 0   &kp LG(LA(F)) &kp LG(LA(LEFT)) &mt_win_right RSHFT 0 &kp LG(LC(RIGHT)) &kp LG(LC(RIGHT))
             >;
         };
 
@@ -223,6 +250,21 @@
 // [4行目]
 // 左手: (透過)                                    | 右手:Mission Control(Ctrl上) | 仮想デスクトップ左に移動(Ctrl左) | 仮想デスクトップ右に移動(Ctrl右) |(透過)|(透過)|
 &trans     &trans    &trans    &trans    &trans   &kp LC(UP)  &kp LC(LEFT)  &kp LC(RIGHT)  &trans  &trans
+            >;
+        };
+
+        // ----------------------------------------------------------------------
+        // ■ Layer 5: layer5 [DPI/SNIPE]（長押し中の精密操作スナイパーレイヤー）
+        // Layer 3 の DPIホールドキー長押し中に有効化されます。
+        // すべて透過(&trans)にしておくことで、Layer 3 のクリック(MB1/MB2/MB3)等をそのまま使用可能。
+        // ----------------------------------------------------------------------
+        layer5 {
+            label = "DPI";
+            bindings = <
+&trans &trans &trans &trans &trans   &trans &trans &trans &trans &trans
+&trans &trans &trans &trans &trans   &trans &trans &trans &trans &trans
+&trans &trans &trans &trans &trans   &trans &trans &trans &trans &trans
+&trans &trans &trans &trans &trans   &trans &trans &trans &trans &trans
             >;
         };
     };
