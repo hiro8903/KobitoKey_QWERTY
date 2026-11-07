@@ -38,10 +38,10 @@
         // 短押しで上記マクロ、長押しで右Shift（または左Shift）になるMod-Tap
         mt_win_right: modifier_tap_win_right {
             compatible = "zmk,behavior-hold-tap";
-            #binding-cells = <2>;
+            #binding-cells = <1>;
             flavor = "balanced";
             tapping-term-ms = <200>;
-            bindings = <&kp>, <&macro_win_right>; // 長押しで第一引数(Shift等)、短押しで第二引数(マクロ)
+            bindings = <&kp>, <&macro_win_right>; // 長押しで第一引数(Shift等)、短押しでマクロ
         };
         // -------------------------------------------
 
@@ -221,8 +221,8 @@
 &trans     &trans  &trans    &trans    &trans  &kp LG(TAB)   &kp LG(X) &kp LG(LA(V))  &kp LG(L)  &ht_dpi_to0 5 0
 
 // [4行目]
-// 左手: 左Shift, (透過), 左Cmd, 左Alt, [Layer 0に戻る] | 右手: ウィンドウ最大化(Cmd+Opt+F), ウィンドウ左寄せ(Cmd+Opt+←), [長押し:Shift / 短押し:ウィンドウ右寄せ(Cmd+Opt+→)], ウィンドウ左上寄せ(Cmd+LC(RIGHT)), ウィンドウ右上寄せ(Cmd+LC(RIGHT))
-&kp LSHFT  &trans  &kp LCMD  &kp LALT  &to 0   &kp LG(LA(F)) &kp LG(LA(LEFT)) &mt_win_right RSHFT 0 &kp LG(LC(RIGHT)) &kp LG(LC(RIGHT))
+// 左手: 左Shift, (透過), 左Cmd, 左Alt, [Layer 0に戻る] | 右手: ウィンドウ最大化(Cmd+Opt+F), ウィンドウ左寄せ(Cmd+Opt+←), [長押し:Shift / 短押し:ウィンドウ右寄せ(Cmd+Opt+→)], ウィンドウ左上寄せ(Cmd+Ctrl+←), ウィンドウ右上寄せ(Cmd+Ctrl+→)
+&kp LSHFT  &trans  &kp LCMD  &kp LALT  &to 0   &kp LG(LA(F)) &kp LG(LA(LEFT)) &mt_win_right RSHFT &kp LG(LC(LEFT)) &kp LG(LC(RIGHT))
             >;
         };
 
