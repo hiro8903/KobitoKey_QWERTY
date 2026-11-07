@@ -27,14 +27,6 @@
             tapping-term-ms = <200>;
             bindings = <&mo>, <&mkp>;
         };
-        // 短押しで Layer 0 へ復帰、長押しで Layer 5（DPI精密操作）へ一時切り替え
-        ht_dpi_to0: hold_tap_dpi_to0 {
-            compatible = "zmk,behavior-hold-tap";
-            #binding-cells = <2>;
-            flavor = "tap-preferred";
-            tapping-term-ms = <200>;
-            bindings = <&mo>, <&to>; // 長押しで第一引数(&mo 5)、短押しで第二引数(&to 0)
-        };
     };
 
     // ==========================================================================
@@ -190,8 +182,8 @@
             label = "MOUSE";
             bindings = <
 // [1行目]
-// 左手: (透過)                                 | 右手: 進む (Cmd+右), 左クリック (MB1), [長押し Layer4 / 短押し 中/ホイールクリック(MB3)], 右クリック (MB2), [長押し DPIホールド/短押し layer0に戻る]
-&trans     &trans  &trans    &trans    &trans  &kp LG(RIGHT) &mkp MB1  &lt_mb3 4 MB3  &mkp MB2  &ht_dpi_to0 5 0
+// 左手: (透過)                                 | 右手: 進む (Cmd+右), 左クリック (MB1), [長押し Layer4 / 短押し 中/ホイールクリック(MB3)], 右クリック (MB2), [長押し DPIホールド / 短押し P]
+&trans     &trans  &trans    &trans    &trans  &kp LG(RIGHT) &mkp MB1  &lt_mb3 4 MB3  &mkp MB2  &lt 5 P
 
 // [2行目]
 // 左手: (透過)                                 | 右手: 戻る (Cmd+左), (透過), (透過), (透過), (透過)
