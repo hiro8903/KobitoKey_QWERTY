@@ -262,8 +262,8 @@
 &trans &trans &trans &trans &trans   &trans &trans &trans &trans &trans
 
 // [2行目]
-// 左手: (すべて透過)                           | 右手: ウィンドウ左上寄せ(Cmd+Ctrl+←), ウィンドウ右上寄せ(Cmd+Ctrl+→), (K長押し中), Command, Tab
-&trans &trans &trans &trans &trans   &kp LG(LC(LEFT)) &kp LG(LC(RIGHT)) &trans &kp RCMD &kp TAB
+// 左手: (すべて透過)                           | 右手: ウィンドウ左上寄せ(Cmd+Ctrl+←), ウィンドウ右上寄せ(Cmd+Ctrl+→), (K長押し中), Command+Tab, (透過)
+&trans &trans &trans &trans &trans   &kp LG(LC(LEFT)) &kp LG(LC(RIGHT)) &trans &kp LG(TAB) &trans
 
 // [3行目]
 // 左手: (すべて透過)                           | 右手: ウィンドウ左下寄せ(Cmd+Ctrl+Shift+←), ウィンドウ右下寄せ(Cmd+Ctrl+Shift+→), (残り透過)
