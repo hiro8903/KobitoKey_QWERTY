@@ -68,6 +68,29 @@
             key-positions = <10 11>;
             bindings = <&kp TAB>;
         };
+
+        // 「アプリケーションウィンドウ」表示のコンボ (Mac用)
+        combo_app_windows {
+            timeout-ms = <50>;
+            bindings = <&kp LC(DOWN)>;
+            key-positions = <6 8>;
+        };
+
+        // 「Ctrl」キーのコンボ
+        // BSCP(35) と ENT(36) を50ms以内に同時押しすると「Ctrlキー」を送信
+        combo_ctrl_modifier {
+            timeout-ms = <50>;
+            bindings = <&kp LCTRL>;
+            key-positions = <35 36>;
+        };
+
+        // 「Command」キーのコンボ
+        // ENT(36) と SHIFT(37) を50ms以内に同時押しすると「Commandキー」を送信
+        combo_ctrl_modifier {
+            timeout-ms = <50>;
+            bindings = <&kp LCTRL>;
+            key-positions = <36 37>;
+        };
     };
 
     // ==========================================================================
@@ -178,8 +201,9 @@
 
         // ----------------------------------------------------------------------
         // ■ Layer 4: layer4 [SCROLL ＆ SHORTCUTS]（右手のみでのIキー長押し操作用）
-        // タブの移動や作成・削除
-        // 仮想デスクトップの移動
+        // トラックボールスクロール ＆ 仮想デスクトップ・ウィンドウ操作
+        // タブの操作（移動・作成・削除・復活）とテキスト入力（s, g, d, r）
+        // 音量コントロール（音量調整・ミュート）
         // ----------------------------------------------------------------------
         layer4 {
             label = "SCROLL";
@@ -187,15 +211,18 @@
 // [1行目]
 // 左手: (透過)                                    | 右手: タブ復活(Cmd+Shift+T) | 前のタブ(Ctrl+Shift+Tab) | 透過(I 長押し中) | 次のタブ(Ctrl+Tab) | (透過)
 &trans     &trans    &trans    &trans    &trans   &kp LG(LS(T))  &kp LC(LS(TAB))  &trans    &kp LC(TAB)      &trans
+
 // [2行目]
-// 左手: (透過)                                      | 右手:新規タブ(Cmd+T) | (透過)|(透過)|(透過)|(透過)|
-&trans     &trans    &trans    &trans    &trans   &kp LG(T)         &trans  &trans  &trans  &trans
+// 左手: (透過)                                    | 右手:新規タブ(Cmd+T) | s | g | d | r |
+&trans     &trans    &trans    &trans    &trans   &kp LG(T)    &kp S  &kp G  &kp D  &kp R
+
 // [3行目]
-// 左手: (透過)                                      | 右手:タブ削除(Cmd+W) | (透過)|(透過)|(透過)|(透過)|
-&trans     &trans    &trans    &trans    &trans   &kp LG(W)         &trans  &trans  &trans  &trans
+// 左手: (透過)                                    | 右手:タブ削除(Cmd+W) | [長押し ミュート / 短押し 音量下] | 音量上げ | (透過) | (透過) |
+&trans     &trans    &trans    &trans    &trans   &kp LG(W)    &mt C_MUTE C_VOL_DN    &kp C_VOL_UP    &trans    &trans
+
 // [4行目]
-// 左手: (透過)                                      | 右手:ウィンドウ一覧表示(Ctrl上)|仮想デスクトップ左に移動(Ctrl左) | 仮想デスクトップ右に移動(Ctrl右) |(透過)|(透過)|
-&trans     &trans    &trans    &trans    &trans   &kp LC(UP)  &kp LC(LEFT)  &kp LC(RIGHT)  &trans  &trans
+// 左手: (透過)                                    | 右手:[長押し launcher(Ctrl下) / 短押し Mission Control(Ctrl上)] | 仮想デスクトップ左に移動(Ctrl左) | 仮想デスクトップ右に移動(Ctrl右) |(透過)|(透過)|
+&trans     &trans    &trans    &trans    &trans   &mt LG(SPACE) LC(UP)  &kp LC(LEFT)  &kp LC(RIGHT)  &trans  &trans
             >;
         };
     };
