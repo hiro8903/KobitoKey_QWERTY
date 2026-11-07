@@ -132,20 +132,20 @@
             label = "NUMBER";
             bindings = <
 // [1行目]
-// 左手: (透過), 7, 8, 9, (透過)        | 右手: - (マイナス), (透過), ↑ (上矢印), (透過), (透過)
-&trans     &kp N7  &kp N8  &kp N9     &trans  &kp MINUS  &trans     &kp UP    &trans     &trans
+// 左手: (透過), 7, 8, 9, (透過)        | 右手: - (マイナス), `(バッククォート), ↑ (上矢印), #(ハッシュ), (透過)
+&trans     &kp N7  &kp N8  &kp N9     &trans  &kp MINUS  &kp GRAVE  &kp UP    &kp HASH   &trans
 
 // [2行目]
 // 左手: = (イコール), 4, 5, 6, (透過)   | 右手: + (プラス), ← (左矢印), ↓ (下矢印), → (右矢印), (透過)
 &kp EQUAL  &kp N4  &kp N5  &kp N6     &trans  &kp PLUS   &kp LEFT   &kp DOWN  &kp RIGHT  &trans
 
 // [3行目]
-// 左手: (透過), 1, 2, 3, (透過)        | 右手: * (アスタリスク), / (スラッシュ), [ (開き角括弧), ] (閉じ角括弧), (透過)
-&trans     &kp N1  &kp N2  &kp N3     &trans  &kp ASTRK  &kp SLASH  &kp LBKT  &kp RBKT   &trans
+// 左手: (透過), 1, 2, 3, (透過)        | 右手: * (アスタリスク), / (スラッシュ), [ (開き角括弧), ] (閉じ角括弧), \(バックスラッシュ)
+&trans     &kp N1  &kp N2  &kp N3     &trans  &kp ASTRK  &kp SLASH  &kp LBKT  &kp RBKT   &kp BSLH
 
 // [4行目]
-// 左手: (透過), 0, (透過), 左Shift, (透過)| 右手: (すべて透過：Layer 0のキーがそのまま効きます)
-&trans     &kp N0  &trans  &kp LSHFT  &trans  &trans     &trans     &trans    &trans     &trans
+// 左手: (透過), 0, (透過), 左Shift, (透過)| 右手: (透過), (透過), (透過), （(開き丸括弧), ）(閉じ丸括弧)
+&trans     &kp N0  &trans  &kp LSHFT  &trans  &trans     &trans     &trans    &kp LS(N9) &kp LS(N0)
         };
 
         // ----------------------------------------------------------------------
