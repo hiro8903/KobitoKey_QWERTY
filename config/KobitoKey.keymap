@@ -27,15 +27,6 @@
             tapping-term-ms = <200>;
             bindings = <&mo>, <&mkp>;
         };
-        // 短押しでウィンドウ右寄せ（Cmd + Opt + →）、長押しでShiftになるMod-Tap
-        mt_win_right: modifier_tap_win_right {
-            compatible = "zmk,behavior-hold-tap";
-            #binding-cells = <2>;
-            flavor = "balanced";
-            tapping-term-ms = <200>;
-            bindings = <&kp>, <&kp>; // 長押しで第一引数(Shift等)、短押しで第二引数(ショートカット)
-        };
-
         // 短押しで Layer 0 へ復帰、長押しで Layer 5（DPI精密操作）へ一時切り替え
         ht_dpi_to0: hold_tap_dpi_to0 {
             compatible = "zmk,behavior-hold-tap";
@@ -199,20 +190,20 @@
             label = "MOUSE";
             bindings = <
 // [1行目]
-// 左手: (透過)                                 | 右手: 進む (Cmd+右), 左クリック (MB1), [長押し Layer4 / 短押し 中/ホイールクリック(MB3)], 右クリック (MB2), (透過)
-&trans     &trans  &trans    &trans    &trans  &kp LG(RIGHT) &mkp MB1  &lt_mb3 4 MB3  &mkp MB2  &trans
+// 左手: (透過)                                 | 右手: 進む (Cmd+右), 左クリック (MB1), [長押し Layer4 / 短押し 中/ホイールクリック(MB3)], 右クリック (MB2), [長押し DPIホールド/短押し layer0に戻る]
+&trans     &trans  &trans    &trans    &trans  &kp LG(RIGHT) &mkp MB1  &lt_mb3 4 MB3  &mkp MB2  &ht_dpi_to0 5 0
 
 // [2行目]
-// 左手: (透過)                               | 右手: 戻る (Cmd+左), コピー(Cmd+C), ペースト(Cmd+V), 検索(Cmd+F), [長押し DPIホールド/短押し layer0に戻る]
-&trans     &trans  &trans    &trans    &trans  &kp LG(LEFT)  &kp LG(C) &kp LG(V)      &kp LG(F)  &ht_dpi_to0 5 0
+// 左手: (透過)                                 | 右手: 戻る (Cmd+左), (透過), (透過), (透過), (透過)
+&trans     &trans  &trans    &trans    &trans  &kp LG(LEFT)  &trans    &trans         &trans    &trans
 
 // [3行目]
-// 左手: (透過)                               | 右手: アプリ切替(Cmd+TAB), 切り取り(Cmd+X), クリップボード(Cmd+Opt+V), URL選択(Cmd+L), [長押し DPIホールド/短押し layer0に戻る]
-&trans     &trans  &trans    &trans    &trans  &kp LG(TAB)   &kp LG(X) &kp LG(LA(V))  &kp LG(L)  &ht_dpi_to0 5 0
+// 左手・右手: すべて透過
+&trans     &trans  &trans    &trans    &trans  &trans        &trans    &trans         &trans    &trans
 
 // [4行目]
-// 左手: 左Shift, (透過), 左Cmd, 左Alt, [Layer 0に戻る] | 右手: ウィンドウ最大化(Cmd+Opt+F), ウィンドウ左寄せ(Cmd+Opt+←), [長押し:Shift / 短押し:ウィンドウ右寄せ(Cmd+Opt+→)], ウィンドウ左上寄せ(Cmd+Ctrl+←), ウィンドウ右上寄せ(Cmd+Ctrl+→)
-&kp LSHFT  &trans  &kp LCMD  &kp LALT  &to 0   &kp LG(LA(F)) &kp LG(LA(LEFT)) &mt_win_right RSHFT LG(LA(RIGHT)) &kp LG(LC(LEFT)) &kp LG(LC(RIGHT))
+// 左手: 左Shift, (透過), 左Cmd, 左Alt, [Layer 0に戻る] | 右手: すべて透過
+&kp LSHFT  &trans  &kp LCMD  &kp LALT  &to 0   &trans        &trans    &trans         &trans    &trans
             >;
         };
 
