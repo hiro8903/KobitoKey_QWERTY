@@ -80,7 +80,7 @@
         // BSCP(35) と ENT(36) を50ms以内に同時押しすると「Ctrlキー」を送信
         combo_ctrl {
             timeout-ms = <50>;
-            bindings = <&kp LCTRL>;
+            bindings = <&kp RCTRL>;
             key-positions = <35 36>;
         };
 
@@ -88,7 +88,7 @@
         // ENT(36) と SHIFT(37) を50ms以内に同時押しすると「Commandキー」を送信
         combo_Command {
             timeout-ms = <50>;
-            bindings = <&kp LCTRL>;
+            bindings = <&kp RCMD>;
             key-positions = <36 37>;
         };
     };
