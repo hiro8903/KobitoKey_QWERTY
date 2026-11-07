@@ -27,6 +27,15 @@
             tapping-term-ms = <200>;
             bindings = <&mo>, <&mkp>;
         };
+
+        // 短押しでウィンドウ右寄せ（Cmd + Opt + →）、長押しでShiftになるMod-Tap
+        mt_win_right: modifier_tap_win_right {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <200>;
+            bindings = <&kp>, <&kp>;
+        };
     };
 
     // ==========================================================================
@@ -110,8 +119,8 @@
 &kp Q      &kp W     &kp E     &kp R        &kp T      &kp Y     &kp U        &lt 4 I    &kp O      &kp P
 
 // [2行目: ホームポジション段]
-// 左手: A, S, D, F, G                          | 右手: H, J, K, L, ; (セミコロン)
-&kp A      &kp S     &kp D     &kp F        &kp G      &kp H     &kp J        &kp K      &kp L      &kp SEMI
+// 左手: A, S, D, F, G                          | 右手: H, J, [長押し Layer6 / 短押し K], L, ; (セミコロン)
+&kp A      &kp S     &kp D     &kp F        &kp G      &kp H     &kp J        &lt 6 K    &kp L      &kp SEMI
 
 // [3行目: 下段]
 // 左手: Z, X, C, V, B                          | 右手: N, M, , (カンマ), . (ピリオド), ' (シングルクォート)
@@ -238,6 +247,31 @@
 &trans &trans &trans &trans &trans   &trans &trans &trans &trans &trans
 &trans &trans &trans &trans &trans   &trans &trans &trans &trans &trans
 &trans &trans &trans &trans &trans   &trans &trans &trans &trans &trans
+            >;
+        };
+
+        // ----------------------------------------------------------------------
+        // ■ Layer 6: layer6 [WINDOW]（ウィンドウ整理・配置レイヤー）
+        // Layer 0 および Layer 3 の Kキー（キー番号17）長押し中に有効化されます。
+        // ----------------------------------------------------------------------
+        layer6 {
+            label = "WINDOW";
+            bindings = <
+// [1行目]
+// 左手: (すべて透過)                           | 右手: (すべて透過)
+&trans &trans &trans &trans &trans   &trans &trans &trans &trans &trans
+
+// [2行目]
+// 左手: (すべて透過)                           | 右手: ウィンドウ左上寄せ(Cmd+Ctrl+←), ウィンドウ右上寄せ(Cmd+Ctrl+→), (K長押し中), Command+Tab, (透過)
+&trans &trans &trans &trans &trans   &kp LG(LC(LEFT)) &kp LG(LC(RIGHT)) &trans &kp LG(TAB) &trans
+
+// [3行目]
+// 左手: (すべて透過)                           | 右手: ウィンドウ左下寄せ(Cmd+Ctrl+Shift+←), ウィンドウ右下寄せ(Cmd+Ctrl+Shift+→), (残り透過)
+&trans &trans &trans &trans &trans   &kp LG(LC(LS(LEFT))) &kp LG(LC(LS(RIGHT))) &trans &trans &trans
+
+// [4行目]
+// 左手: (すべて透過)                           | 右手: ウィンドウ最大化(Cmd+Opt+F), ウィンドウ左寄せ(Cmd+Opt+←), [長押し:Shift / 短押し:ウィンドウ右寄せ(Cmd+Opt+→)], (残り透過)
+&trans &trans &trans &trans &trans   &kp LG(LA(F)) &kp LG(LA(LEFT)) &mt_win_right RSHFT LG(LA(RIGHT)) &trans &trans
             >;
         };
     };
